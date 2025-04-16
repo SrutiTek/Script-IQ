@@ -463,30 +463,6 @@ def save_to_csv(movie_data, budget, sentiment_shift, top_char_arcs, lexical_dive
             indie_quality_score 
         ])
 
-    #print(f"Data for '{movie_data['Title']}' has been saved to {filename}.")
-"""def save_sentiment_log(movie_title, sentiment_log):
-
-    # Make sure the folder exists
-    os.makedirs(folder, exist_ok=True)
-
-    # Clean movie title for filename
-    safe_title = movie_title.lower().replace(" ", "_").replace(":", "").replace("/", "_")
-    filename = os.path.join(folder, f"{safe_title}_sentiment_log.csv")
-
-    with open(filename, mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file)
-        writer.writerow(['Character', 'Line', 'Sentiment Label', 'Sentiment Score'])
-
-        for entry in sentiment_log:
-            writer.writerow([
-                entry['character'],
-                entry['line'],
-                entry['sentiment'],
-                entry['score']
-            ])
-    
-    print(f"✅ Sentiment log saved to: {filename}") """
-
 def main():
     # Fetch and save movie data and scripts
     for movie_title in movies_list:
@@ -621,148 +597,6 @@ df = clean_financial_data(movie_data)
 print(movie_data.dtypes)
 
 
-#       #1. Pair Plot 
-# numeric_columns = ['BoxOffice', 'BoxOffice(adj)', 'Budget', 'Total Star Power', 'IMDb Rating', 'Rotten Tomatoes']
-
-
-# # Plot the pair plot
-# sns.pairplot(movie_data[['BoxOffice(adj)', 'Budget', 'IMDb Rating', 'Total Star Power']])
-# plt.suptitle("Pair Plot of Box Office, Budget, IMDb Rating, and Total Star Power", y=1.02)
-# plt.show()
-
-#      # 2. Correlation Heatmap
-# corr = movie_data[['BoxOffice(adj)', 'Budget', 'IMDb Rating', 'Total Star Power']].corr()
-
-# # Plot the heatmap
-# sns.heatmap(corr, annot=True, cmap='coolwarm', fmt='.2f', cbar=True)
-# plt.title("Correlation Heatmap of Variables")
-# plt.show()
-
-#         #3  Facet Grid (Box Office vs. IMDb Rating by Total Star Power)
-# # Create bins for Total Star Power to divide data into different levels
-# bins = [0, 50, 100, 150, 200]  # Define bins according to the distribution of Star Power
-# labels = ['Low', 'Medium', 'High', 'Very High']  # Labels for bins
-# movie_data['Total Star Power Category'] = pd.cut(movie_data['Total Star Power'], bins=bins, labels=labels)
-
-# # Create the facet grid
-# g = sns.FacetGrid(movie_data, col='Total Star Power Category', col_wrap=2, height=5)
-# g.map(sns.scatterplot, 'IMDb Rating', 'BoxOffice(adj)', alpha=.7)
-# g.set_axis_labels("IMDb Rating", "Box Office (Adjusted)")
-# g.set_titles("{col_name} Total Star Power")
-# plt.suptitle("Facet Grid: IMDb Rating vs. Box Office by Total Star Power", y=1.02)
-# plt.show()
-
-
-#         #4  Box Plot (Box Office vs. Rotten Tomatoes Score)
-# plt.figure(figsize=(10, 6))
-#sns.boxplot(x='Rotten Tomatoes', y='BoxOffice(adj)', data=movie_data)
-# plt.title("Box Plot: Box Office (Adjusted) vs Rotten Tomatoes Score")
-# plt.xlabel("Rotten Tomatoes Score")
-# plt.ylabel("Box Office (Adjusted)")
-# plt.show()
-
-#         #5 Interaction Plot (Total Star Power vs. IMDb Rating vs. Box Office)
-# plt.figure(figsize=(10, 6))
-# sns.scatterplot(x='IMDb Rating', y='BoxOffice(adj)', hue='Total Star Power', data=movie_data, palette='viridis', alpha=0.7)
-# plt.title("Interaction Plot: IMDb Rating vs Box Office with Star Power")
-# plt.xlabel("IMDb Rating")
-# plt.ylabel("Box Office (Adjusted)")
-# plt.legend(title="Total Star Power")
-# plt.show()
-
-#         #6 3D Plot of Sentiment Shift, Lexical Diversity, and Box Office
-# # Filter out rows with missing data
-# filtered = movie_data.dropna(subset=['Sentiment Shift', 'Lexical Diversity', 'BoxOffice(adj)'])
-
-# # Extract features
-# x = filtered['Sentiment Shift']
-# y = filtered['Lexical Diversity']
-# z = filtered['BoxOffice(adj)']
-# titles = filtered['Title']
-
-# # Plot
-# fig = plt.figure(figsize=(10, 7))
-# ax = fig.add_subplot(111, projection='3d')
-
-# scatter = ax.scatter(x, y, z, c=z, cmap='viridis', s=80)
-
-# # Label axes
-# ax.set_xlabel("Sentiment Shift", fontsize=10)
-# ax.set_ylabel("Lexical Diversity", fontsize=10)
-# ax.set_zlabel("Box Office (Adj)", fontsize=10)
-# ax.set_title("Script Sentiment, Diversity, and Box Office", fontsize=12)
-
-# # Optional: Label a dew points
-# for i in range(len(titles)):
-#     ax.text(x.iloc[i], y.iloc[i], z.iloc[i], titles.iloc[i], fontsize=8)
-
-# plt.colorbar(scatter, label="Box Office (Adj)")
-# plt.tight_layout()
-# plt.show()
-
-#         #7 Character Arc Complexity vs. Box Office
-# def parse_arc(val):
-#     try:
-#         return float(val.split(":")[1].strip())
-#     except:
-#         return np.nan
-
-# movie_data["Arc1"] = movie_data["ArcComplexity1"].apply(parse_arc)
-# movie_data["Arc2"] = movie_data["ArcComplexity2"].apply(parse_arc)
-# movie_data["Arc3"] = movie_data["ArcComplexity3"].apply(parse_arc)
-
-# movie_data["Avg_Arc_Complexity"] = movie_data[["Arc1", "Arc2", "Arc3"]].mean(axis=1)
-
-# sns.regplot(data=movie_data, x="Avg_Arc_Complexity", y="BoxOffice(adj)", scatter_kws={'s': 60}, line_kws={"color": "purple"})
-# plt.title("Character Arc Complexity vs. Box Office (Adj)")
-# plt.xlabel("Average Character Arc Complexity")
-# plt.ylabel("Box Office (Adjusted)")
-# plt.tight_layout()
-# plt.show()
-
-#           #8 IMDB and Rotten Tomatoes vs Script quality - avg sentiment score and lexical diversity 
-# corr_features = movie_data[['Sentiment Shift', 'Lexical Diversity', 'IMDb Rating', 'Rotten Tomatoes']]
-# corr_matrix = corr_features.corr()
-
-# # Plot heatmap
-# plt.figure(figsize=(8, 6))
-# sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)
-# plt.title("Correlation Heatmap: Sentiment Shift, Diversity, and Ratings", fontsize=14)
-# plt.tight_layout()
-# plt.show()
-
-
-#             # Indie Film analyisis 
-# top_indie_films = movie_data.sort_values(by='Indie Quality Score', ascending=False).head(10)
-# print(top_indie_films[['Title', 'Indie Quality Score', 'Budget', 'Sentiment Shift', 'Lexical Diversity']])
-
-# sns.scatterplot(data=movie_data, x='Indie Quality Score', y='Rotten Tomatoes')
-# plt.title("Indie Quality vs. Rotten Tomatoes")
-# plt.show()
-
-
-#             # BOX OFFICE AND ROTTEN TOMAOTES 
-
-# df = movie_data[['BoxOffice(adj)', 'Rotten Tomatoes']].dropna()
-
-# # Step 3: Display correlation
-# correlation = df['BoxOffice(adj)'].corr(df['Rotten Tomatoes'])
-# print(f"\n🔗 Correlation between Rotten Tomatoes and Box Office (adj): {correlation:.4f}")
-
-# # Step 4: Scatter plot with regression line
-# plt.figure(figsize=(10, 6))
-# sns.regplot(x='Rotten Tomatoes', y='BoxOffice(adj)', data=df, scatter_kws={'alpha':0.6})
-# plt.title('Rotten Tomatoes Score vs. Box Office Revenue (Adjusted)', fontsize=14)
-# plt.xlabel('Rotten Tomatoes Score (%)')
-# plt.ylabel('Box Office Revenue (Adjusted $)')
-# plt.grid(True)
-# plt.tight_layout()
-# plt.show()
-
-
-
-
-
 ##LINEAR REGRESSION MODEL##
 
 df = pd.read_csv('movie_data.csv')
@@ -791,10 +625,6 @@ def adjust_sentiment(s):
 
 df['Sentiment_Adjusted'] = df['Sentiment Shift'].apply(adjust_sentiment)
 
-# def adjust_lexical(l):
-#     if pd.isna(l): return np.nan
-#     # Use gentle bell curve centered at 0.24, covers 0.22–0.26 nicely
-#     return max(0, -75 * (l - 0.24)**2 + 1)
 
 def adjust_lexical(l, center=0.24, width=0.02):
     if pd.isna(l): return np.nan
@@ -825,8 +655,6 @@ print(filtered_df)
 bin_avg = filtered_df['Rotten Tomatoes'].mean()
 print(f"\n📊 Corrected Average RT for 0.333–0.667 bin: {bin_avg:.2f}%")
 
-#print("\n📊 Feature Summary (Before Indie Score):")
-#print(df[['Sentiment Shift', 'Lexical Diversity', 'Avg Arc Complexity']].describe())
 
 required_columns = ['BoxOffice(adj)', 'Rotten Tomatoes', 'Sentiment Shift', 'Lexical Diversity', 'Avg Arc Complexity', 'Total Star Power', 'Budget']
 df = df.dropna(subset=required_columns)
@@ -1052,139 +880,6 @@ plt.tight_layout()
 plt.show()
 
 
-
-
-
-
-
-# plt.figure(figsize=(10,6))
-# plt.scatter(df['Creative_Alpha'], df['Commercial_Alpha'], c=df['Undervaluation_Score'], cmap='coolwarm', s=100)
-# plt.xlabel('Creative Alpha (Predicted RT - Actual RT)')
-# plt.ylabel('Commercial Alpha (Predicted BO - Actual BO)')
-# plt.title('🎬 Undervalued Films: Creative vs Commercial')
-# plt.colorbar(label='Undervaluation Score')
-# plt.grid(True)
-
-# for _, row in df.iterrows():
-#     plt.text(row['Creative_Alpha'], row['Commercial_Alpha'], row['Title'], fontsize=8, alpha=0.7)
-
-# plt.show()
-
-# print("\n🧪 Check: Any 0s in Weighted IQ Scores?")
-# print(df[['Title', 'Weighted_IQ_Scores']].sort_values(by='Weighted_IQ_Scores').head(10))
-# print("\n✅ Weighted IQ Score Column Stats:")
-# print(df['Weighted_IQ_Scores'].describe())
-# #GRAPH UNDERVALUED: RT SCORE VS INDIE SCORE (W/AWARD VS NON AWARD WINNERS)
-# df['Award Winner'] = df['Title'].apply(lambda x: 'Award Winner' if x in award_winners else 'Other')
-
-# # Plot
-# plt.figure(figsize=(10, 6))
-# sns.scatterplot(
-#     data=df, 
-#     x='Rotten Tomatoes', 
-#     y='Weighted_IQ_Scores', 
-#     hue='Award Winner',
-#     style='Award Winner',
-#     palette={'Award Winner': 'royalblue', 'Other': 'darkred'},
-#     s=100
-# )
-
-# # Add diagonal line (perfect agreement)
-# plt.plot([df['Rotten Tomatoes'].min(), df['Rotten Tomatoes'].max()],
-#          [df['Rotten Tomatoes'].min(), df['Rotten Tomatoes'].max()],
-#          color='gray', linestyle='--', label='Perfect Match (y=x)')
-
-# plt.title("🎬 Creative Alpha: Indie Score vs Rotten Tomatoes")
-# plt.xlabel("Rotten Tomatoes (%)")
-# plt.ylabel("Weighted_IQ_Scores")
-# plt.legend()
-# plt.grid(True)
-# plt.tight_layout()
-# plt.ylim(0.60, 0.90)  # Just slightly wider than your actual scores
-# plt.show()
-
-
-# # Sort by undervaluation score descending
-# top_undervalued = df.sort_values(by='Undervaluation_Score', ascending=False)
-
-# # Select columns for display
-# columns_to_show = [
-#     'Title', 
-#     'Rotten Tomatoes', 
-#     'BoxOffice(adj)', 
-#     'Predicted_RT', 
-#     'Predicted_BoxOffice', 
-#     'Creative_Alpha', 
-#     'Commercial_Alpha', 
-#     'Undervaluation_Score'
-# ]
-
-# # Display top 10 as a formatted table
-# top_undervalued_table = top_undervalued[columns_to_show].head(10)
-# print("\n🎯 Top Undervalued Films:")
-
-
-# # Scatterplot: Predicted RT vs Actual RT
-# plt.figure(figsize=(8, 6))
-# sns.scatterplot(x=df['Rotten Tomatoes'], y=df['Predicted_RT'])
-
-# # Add y=x reference line
-# plt.plot([0, 100], [0, 100], color='gray', linestyle='--')
-# plt.title("📈 Predicted vs Actual Rotten Tomatoes Scores")
-# plt.xlabel("Actual Rotten Tomatoes Score")
-# plt.ylabel("Predicted Rotten Tomatoes Score")
-# plt.grid(True)
-# plt.tight_layout()
-# plt.show()
-
-
-# import seaborn as sns
-# import matplotlib.pyplot as plt
-# import pandas as pd
-
-# # ---- Sentiment Shift check ----
-# sns.histplot(df['Sentiment Shift'], kde=True)
-# plt.title('Distribution of Sentiment Variation Across Scripts')
-# plt.xlabel('Standard Deviation of Sentiment')
-# plt.ylabel('Count')
-# plt.show()
-
-# sns.boxplot(x='Award_Winner', y='Sentiment Shift', data=df)
-# plt.title('Sentiment Shift: Award Winners vs Others')
-# plt.xlabel('Award Winner')
-# plt.ylabel('Sentiment Shift')
-# plt.show()  # <<< Add this to render the boxplot
-
-# # ---- Lexical Diversity check ----
-# sns.histplot(df['Lexical Diversity'], kde=True)
-# plt.title('Distribution of Lexical Diversity')
-# plt.xlabel('Lexical Diversity')
-# plt.ylabel('Count')
-# plt.show()
-
-# sns.boxplot(x='Award_Winner', y='Lexical Diversity', data=df)
-# plt.title('Lexical Diversity: Award Winners vs Others')
-# plt.xlabel('Award Winner')
-# plt.ylabel('Lexical Diversity')
-# plt.show()
-
-# # ---- Character Arc Complexity ----
-# arc_cols = ['ArcComplexity1', 'ArcComplexity2', 'ArcComplexity3']
-# df[arc_cols] = df[arc_cols].apply(pd.to_numeric, errors='coerce')
-# df['Avg_Arc_Complexity'] = df[arc_cols].mean(axis=1)
-
-# sns.histplot(df['Avg_Arc_Complexity'], kde=True)
-# plt.title('Distribution of Avg Character Arc Complexity')
-# plt.xlabel('Average Arc Complexity')
-# plt.ylabel('Count')
-# plt.show()
-
-# # ---- Pairplot ----
-# sns.pairplot(df[['Sentiment Shift', 'Lexical Diversity', 'Avg_Arc_Complexity', 'BoxOffice']], corner=True)
-# plt.suptitle('Pairplot: Script Features vs Box Office', y=1.02)
-# plt.show()
-
-
 correlation_matrix = df[['Sentiment_Adjusted', 'Lexical_Adjusted', 'Rotten Tomatoes']].corr()
 print(correlation_matrix)
 
@@ -1206,23 +901,3 @@ y = df['Rotten Tomatoes']
 
 rt_model = sm.OLS(y, X).fit()
 print(rt_model.summary())
-
-
-
-# Define bin edges (0.88 to 1.00, adjust if your range is different)
-# bins = [0, 0.333, 0.667, 1.0]
-# labels = (bins[:-1] + bins[1:]) / 2
-
-# # Bin lexical values and compute avg Rotten Tomatoes for each bin
-# df['Lexical_Bin'] = pd.cut(df['Lexical Diversity'], bins=bins)
-# bin_means = df.groupby('Lexical_Bin')['Rotten Tomatoes'].mean()
-
-# # Plot
-# plt.figure(figsize=(8, 4))
-# plt.plot(labels, bin_means.values, marker='o', color='crimson')
-# plt.title('Rotten Tomatoes vs Lexical Diversity (Binned)')
-# plt.xlabel('Lexical Diversity')
-# plt.ylabel('Average Rotten Tomatoes Score')
-# plt.grid(True)
-# plt.tight_layout()
-# plt.show()
