@@ -46,8 +46,8 @@ award_winners = set(["Whiplash", "Juno", "Get Out", "Forrest Gump", "Gladiator"]
 
 ##DATA COLLECTION
 # Function to get movie data from OMDB API
-def get_movie_data(movie_title, api_key):
-    url = f"http://www.omdbapi.com/?t={movie_title}&apikey={api_key}"
+def get_movie_data(movie_title, omdb_api_key):
+    url = f"http://www.omdbapi.com/?t={movie_title}&apikey={omdb_api_key}"
     response = requests.get(url)
     movie_data = response.json()
     
@@ -167,13 +167,13 @@ def calculate_total_star_power(imdb_rating, rt_score, cast):
     total_star_power = sum(individual_star_power.values())
     
     return total_star_power
-def fetch_cpi_data_fred(year):
+def fetch_cpi_data_fred(year, fred_key):
     """
     Fetches the CPI value for a given year and 2025.
     Returns the inflation multiplier.
     """
     try:
-        fred = Fred(api_key=FRED_API_KEY)
+        fred = Fred(api_key=fred_key)
 
         # Get CPI for the movie's release year
         cpi_year = fred.get_series('CPIAUCSL', f"{year}-01-01", f"{year}-12-31").mean()
@@ -392,7 +392,7 @@ def extract_topics(dialogues, n_topics=5, n_words=10):
 
 
 # saves data to movie_data.csv
-def save_to_csv(movie_data, budget, sentiment_shift, top_char_arcs, lexical_diversity, named_themes, topic_keywords, indie_quality_score, filename='movie_data.csv'):
+def save_to_csv(movie_data, budget, sentiment_shift, top_char_arcs, lexical_diversity, named_themes, topic_keywords, indie_quality_score, fred_key, filename='movie_data.csv'):
      # Check if the movie is already in the CSV file
     if movie_exists_in_csv(movie_data['Title'], filename):
         #print(f"Movie '{movie_data['Title']}' already exists in the CSV. Skipping.")
@@ -460,20 +460,22 @@ def save_to_csv(movie_data, budget, sentiment_shift, top_char_arcs, lexical_dive
         ])
 
 def main():
+    # APIs
+    omdb_key = os.getenv("omdb_api_key")
+    fred_key = os.getenv("fred_api_key") 
 
-# APIs
-    omdb_key = os.getenv("OMDB_API_KEY")
-    fred_key = os.getenv("FRED_API_KEY")    
+
     # Fetch and save movie data and scripts
     for movie_title in movies_list:
         print(f"\nProcessing movie: {movie_title}")
-        
+    
+    
         if movie_exists_in_csv(movie_title, filename='movie_data.csv'):
             print(f"⏩ Skipping {movie_title} (already saved)")
             continue
 
         # Get metadata
-        movie_data = get_movie_data(movie_title, api_key)
+        movie_data = get_movie_data(movie_title, omdb_key)
         if not movie_data:
             print(f"Skipping {movie_title} due to missing OMDB data.")
             continue
@@ -510,8 +512,7 @@ def main():
         while len(named_themes) < 5:
             named_themes.append("N/A")
 
-        script_sentiment_shift, character_sentiments, sentiment_log = analyze_sentiment(dialogues)    
-        print(f"Sentiment shift score for {movie_title}: {script_sentiment_shift}")
+        print(f"Sentiment shift score for {movie_title}: {sentiment_shift}")
         ##CHARACTER DEPTH##
         # Count most frequent characters
         char_freq = Counter([entry["character"] for entry in sentiment_log])
@@ -539,12 +540,12 @@ def main():
         budget = get_budget(movie_url) if movie_url else None
 
         budget_value = budget if budget and budget > 0 else 1
-        indie_quality_score = (script_sentiment_shift + lexical_diversity) / math.log(budget_value + 1)
+        indie_quality_score = (sentiment_shift + lexical_diversity) / math.log(budget_value + 1)
         indie_quality_score = round(indie_quality_score, 4)
 
         print(f"🎬 Indie Quality Score for {movie_title}: {indie_quality_score}")
         # Save everything
-        save_to_csv(movie_data, budget, script_sentiment_shift, top_char_arcs, lexical_diversity, named_themes, topic_keywords, indie_quality_score)
+        save_to_csv(movie_data, budget, sentiment_shift, top_char_arcs, lexical_diversity, named_themes, topic_keywords, indie_quality_score, fred_key)
 
 
 if __name__ == "__main__":
