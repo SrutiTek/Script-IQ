@@ -34,10 +34,6 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-
-# APIs
-omdb_key = os.getenv("OMDB_API_KEY")
-fred_key = os.getenv("FRED_API_KEY")
 # List of movies you want to analyze (you can change or expand this list)
 
 movies_list = list(set(["Inception", "Alien", "Avatar", "Wicked", "Frozen", "Whiplash", "X-Men", "Wild Wild West", "Tropic Thunder", "Saving Private Ryan", "17 Again", "Juno", "A Quiet Place", "Get Out", "Annie Hall", "500 Days of Summer", "2012", "Barbie", "Constantine", "Alone in the Dark", "Babel", "Life of Pi", "Dear White People", "Fight Club", 
@@ -464,6 +460,10 @@ def save_to_csv(movie_data, budget, sentiment_shift, top_char_arcs, lexical_dive
         ])
 
 def main():
+
+# APIs
+    omdb_key = os.getenv("OMDB_API_KEY")
+    fred_key = os.getenv("FRED_API_KEY")    
     # Fetch and save movie data and scripts
     for movie_title in movies_list:
         print(f"\nProcessing movie: {movie_title}")
