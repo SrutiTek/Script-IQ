@@ -1,6 +1,4 @@
 .env
-__pycache__/
-myenv/
-scripts.csv
-reviews.csv
 *.csv
+myenv/
+__pycache__

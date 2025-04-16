@@ -44,12 +44,11 @@ movies_list = list(set(["Inception", "Alien", "Avatar", "Wicked", "Frozen", "Whi
                        "The Social Network", 
                         "The Blind Side", "Gladiator", "Pearl Harbor", "Joker", "Forrest Gump"])) 
 #movies_list = list(set(["Inception", "Alien", "Avatar"])) 
-nlp = spacypwd.load("en_core_web_md")
+nlp = spacy.load("en_core_web_md")
 award_winners = set(["Whiplash", "Juno", "Get Out", "Forrest Gump", "Gladiator"])
 
 
 ##DATA COLLECTION
-def main():
 # Function to get movie data from OMDB API
 def get_movie_data(movie_title, api_key):
     url = f"http://www.omdbapi.com/?t={movie_title}&apikey={api_key}"
@@ -488,87 +487,88 @@ def save_to_csv(movie_data, budget, sentiment_shift, top_char_arcs, lexical_dive
     
     print(f"✅ Sentiment log saved to: {filename}") """
 
-# Fetch and save movie data and scripts
-for movie_title in movies_list:
-    print(f"\nProcessing movie: {movie_title}")
-    
-    if movie_exists_in_csv(movie_title, filename='movie_data.csv'):
-        print(f"⏩ Skipping {movie_title} (already saved)")
-        continue
+def main():
+    # Fetch and save movie data and scripts
+    for movie_title in movies_list:
+        print(f"\nProcessing movie: {movie_title}")
+        
+        if movie_exists_in_csv(movie_title, filename='movie_data.csv'):
+            print(f"⏩ Skipping {movie_title} (already saved)")
+            continue
 
-    # Get metadata
-    movie_data = get_movie_data(movie_title, api_key)
-    if not movie_data:
-        print(f"Skipping {movie_title} due to missing OMDB data.")
-        continue
+        # Get metadata
+        movie_data = get_movie_data(movie_title, api_key)
+        if not movie_data:
+            print(f"Skipping {movie_title} due to missing OMDB data.")
+            continue
 
-    # Get the cleaned script
-    cleaned_script = get_movie_script(movie_title)
+        # Get the cleaned script
+        cleaned_script = get_movie_script(movie_title)
 
-    # Only proceed if we have a valid script
-    if cleaned_script and cleaned_script not in ["Script not found", "Error fetching script"]:
-        dialogues = extract_dialogue(cleaned_script)
-        sentiment_shift, character_arc_complexity, sentiment_log = analyze_sentiment(dialogues)
-       
-        top_char_arcs = [
-        f"{char}: {round(score, 4)}"
-        for char, score in character_arc_complexity.items()
-        ]
+        # Only proceed if we have a valid script
+        if cleaned_script and cleaned_script not in ["Script not found", "Error fetching script"]:
+            dialogues = extract_dialogue(cleaned_script)
+            sentiment_shift, character_arc_complexity, sentiment_log = analyze_sentiment(dialogues)
+        
+            top_char_arcs = [
+            f"{char}: {round(score, 4)}"
+            for char, score in character_arc_complexity.items()
+            ]
+            while len(top_char_arcs) < 3:
+                top_char_arcs.append("N/A")
+
+            # --- Lexical Diversity ---
+            lexical_diversity = compute_lexical_diversity(dialogues)
+            print(f"Lexical Diversity Score for {movie_title}: {lexical_diversity}")
+
+            # Continue with topic modeling, sentiment analysis, etc.
+            ...
+        else:
+            print(f"Skipping {movie_title} due to missing or bad script.")
+            continue 
+
+    # --- Thematic Topics ---
+        named_themes, topic_keywords = extract_topics(dialogues)
+        print(f"Top Topics for {movie_title}:")
+        named_themes = named_themes[:5]
+        while len(named_themes) < 5:
+            named_themes.append("N/A")
+
+        script_sentiment_shift, character_sentiments, sentiment_log = analyze_sentiment(dialogues)    
+        print(f"Sentiment shift score for {movie_title}: {script_sentiment_shift}")
+        ##CHARACTER DEPTH##
+        # Count most frequent characters
+        char_freq = Counter([entry["character"] for entry in sentiment_log])
+        top_characters = [char for char, _ in char_freq.most_common(3)]
+
+        # Build sentiment time series
+        char_time_series = {char: [] for char in top_characters}
+        for entry in sentiment_log:
+            if entry["character"] in top_characters:
+                char_time_series[entry["character"]].append(entry["score"])
+
+        # Calculate arc complexity (std dev)
+        top_char_arcs = []
+        for char in top_characters:
+            scores = char_time_series[char]
+            std_dev = np.std(scores) if len(scores) > 1 else 0
+            top_char_arcs.append(f"{char}: {round(std_dev, 4)}")
+
+        # Pad to ensure 3 entries
         while len(top_char_arcs) < 3:
             top_char_arcs.append("N/A")
 
-        # --- Lexical Diversity ---
-        lexical_diversity = compute_lexical_diversity(dialogues)
-        print(f"Lexical Diversity Score for {movie_title}: {lexical_diversity}")
+        # Budget
+        movie_url = get_budget_url(movie_title)
+        budget = get_budget(movie_url) if movie_url else None
 
-        # Continue with topic modeling, sentiment analysis, etc.
-        ...
-    else:
-        print(f"Skipping {movie_title} due to missing or bad script.")
-        continue 
+        budget_value = budget if budget and budget > 0 else 1
+        indie_quality_score = (script_sentiment_shift + lexical_diversity) / math.log(budget_value + 1)
+        indie_quality_score = round(indie_quality_score, 4)
 
-# --- Thematic Topics ---
-    named_themes, topic_keywords = extract_topics(dialogues)
-    print(f"Top Topics for {movie_title}:")
-    named_themes = named_themes[:5]
-    while len(named_themes) < 5:
-        named_themes.append("N/A")
-
-    script_sentiment_shift, character_sentiments, sentiment_log = analyze_sentiment(dialogues)    
-    print(f"Sentiment shift score for {movie_title}: {script_sentiment_shift}")
-    ##CHARACTER DEPTH##
-    # Count most frequent characters
-    char_freq = Counter([entry["character"] for entry in sentiment_log])
-    top_characters = [char for char, _ in char_freq.most_common(3)]
-
-    # Build sentiment time series
-    char_time_series = {char: [] for char in top_characters}
-    for entry in sentiment_log:
-        if entry["character"] in top_characters:
-            char_time_series[entry["character"]].append(entry["score"])
-
-    # Calculate arc complexity (std dev)
-    top_char_arcs = []
-    for char in top_characters:
-        scores = char_time_series[char]
-        std_dev = np.std(scores) if len(scores) > 1 else 0
-        top_char_arcs.append(f"{char}: {round(std_dev, 4)}")
-
-    # Pad to ensure 3 entries
-    while len(top_char_arcs) < 3:
-        top_char_arcs.append("N/A")
-
-    # Budget
-    movie_url = get_budget_url(movie_title)
-    budget = get_budget(movie_url) if movie_url else None
-
-    budget_value = budget if budget and budget > 0 else 1
-    indie_quality_score = (script_sentiment_shift + lexical_diversity) / math.log(budget_value + 1)
-    indie_quality_score = round(indie_quality_score, 4)
-
-    print(f"🎬 Indie Quality Score for {movie_title}: {indie_quality_score}")
-    # Save everything
-    save_to_csv(movie_data, budget, script_sentiment_shift, top_char_arcs, lexical_diversity, named_themes, topic_keywords, indie_quality_score)
+        print(f"🎬 Indie Quality Score for {movie_title}: {indie_quality_score}")
+        # Save everything
+        save_to_csv(movie_data, budget, script_sentiment_shift, top_char_arcs, lexical_diversity, named_themes, topic_keywords, indie_quality_score)
 
 
 if __name__ == "__main__":
